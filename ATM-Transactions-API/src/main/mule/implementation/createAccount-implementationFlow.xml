@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+      http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+
+    <!-- HTTP Listener Config -->
+    <http:listener-config name="HTTP_Listener_config">
+        <http:listener-connection host="localhost" port="8083"/>
+    </http:listener-config>
+
+    <!-- Database Config -->
+
+    <!-- Create Account Flow -->
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="e3b78ed2-a5d3-4107-a5d2-2dc8407142d3" >
+		<db:my-sql-connection host="127.0.0.1" port="3306" user="root" password="root" database="atm-transactions" />
+	</db:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="8ae0f803-f288-4979-bb08-fa7371050509">
+		<email:smtp-connection host="smtp.gmail.com" user="bhavani.galipelli08@gmail.com" password="wejy utai hsta odpt" port="#[25]">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="createAccountFlow">
+        <http:listener doc:name="Create Account Listener"
+                       config-ref="HTTP_Listener_config"
+                       path="/createAccount"/>
+
+        <!-- Read request body -->
+
+        <!-- Check if account exists -->
+
+        <!-- Choice to handle existence -->
+        <db:select doc:name="Select" doc:id="73ece7a2-18a5-4ae3-8aff-a7ccae904785" config-ref="Database_Config" target="m_payload">
+			<db:sql ><![CDATA[select * 
+   FROM bank_transactions 
+   WHERE custAccNum = :accountNum
+   AND bankName = :bankName]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'accountNum' : payload.accountNum,
+'bankName' : payload.bankName
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Account Exists Check">
+            <when expression="#[sizeOf(vars.m_payload) &gt; 0]">
+                <set-payload value="#['Account already exist ' ++ payload.accountNum]"/>
+            </when>
+            <otherwise>
+                <!-- Insert new account -->
+                <db:insert doc:name="Insert Account" config-ref="Database_Config">
+                    <db:sql><![CDATA[  INSERT INTO bank_transactions
+                        (custName, custAccNum, atmPin, bankName, accountType, ifscCode, branchName, totalBalance, transactionTimeStamp, accountStatus, wrongPin, mailId, phoneNumber)
+                        VALUES
+                        (:custName, :custAccNum, :atmPin, :bankName, :accountType, :ifscCode, :branchName, :totalBalance, NOW(), 'Active', 0 , :mailId, :phoneNumber)
+                        ]]>
+                    </db:sql>
+                    <db:input-parameters><![CDATA[#[{
+                        custName: payload.custName,
+                        custAccNum: payload.accountNum,                       
+                        atmPin: payload.atmPin,
+                         bankName: payload.bankName,
+                        accountType: payload.accountType,
+                        ifscCode: payload.ifscCode,
+                        branchName: payload.branchName,
+                        totalBalance: (payload.depositAmount default 0),
+                        mailId: payload.mailId,
+                        phoneNumber: payload.contact
+                    }]]]></db:input-parameters>
+                </db:insert>
+                <ee:transform doc:name="Transform Message" doc:id="fe81eb82-2f17-4784-9d81-12956bdb9853">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<email:send doc:name="Send" doc:id="8ae0f803-f288-4979-bb08-fa7371050509" config-ref="Email_SMTP" fromAddress="bhavani.galipelli08@gmail.com" subject='"Congratulations ! Account created "' >
+					<email:to-addresses >
+						<email:to-address value="k.bhavani08@gmail.com" />
+					</email:to-addresses>
+					<email:body contentTransferEncoding="Quoted-Printable" />
+				</email:send>
+				<ee:transform doc:name="Transform Message" doc:id="a6f09b58-9975-4142-bd65-8327c2da6ef9" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="custDetails" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"AccountNumber" : payload.accountNum,
+	"AccountHolderName" : payload.custName,
+	"Bank" : payload.bankName
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+            
+</otherwise>
+        </choice>
+    </flow>
+</mule>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <http:listener-config name="atm-transactions-api-raml-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="atm-transactions-api-raml-config" api="resource::af2783f2-018e-4b78-b68c-f1c8bf4c0b28:atm-transactions-api-raml:1.0.2:raml:zip:atm-transactions-api-raml.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="atm-transactions-api-raml-main">
+        <http:listener config-ref="atm-transactions-api-raml-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="Logger" doc:id="a7ace7e3-4c2b-441c-9745-ffcc4a3adfb9" message="mainflow start logger" />
+        <set-variable value="#[correlationId]" doc:name="Set Variable" doc:id="7327a3e2-a89e-4a0d-a9c8-1d5465acfcd3" variableName="transactionId" />
+        <apikit:router config-ref="atm-transactions-api-raml-config" />
+        <logger level="INFO" doc:name="Logger" doc:id="1d78bf91-2b42-4a7d-a9a2-d3e33883693b" message="mainflow end logger" />
+        <error-handler ref="Error_Handler-APIKit" />
+    </flow>
+    <flow name="atm-transactions-api-raml-console">
+        <http:listener config-ref="atm-transactions-api-raml-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="Logger" doc:id="c6168d47-927f-4354-a07f-f6dcd7f26198" message="mainflow start logger" />
+        <set-variable value="#[correlationId]" doc:name="Set Variable" doc:id="4d3c5829-6e45-4b0a-bc35-9c07db00e6e7" variableName="transactionId" />
+        <apikit:console config-ref="atm-transactions-api-raml-config" />
+        <logger level="INFO" doc:name="Logger" doc:id="04fededb-da5f-4d51-aa54-08a998481ec9" message="mainflow end logger" />
+        <error-handler ref="Error_Handler-APIKit" />
+    </flow>
+    <flow name="put:\unblock:application\json:atm-transactions-api-raml-config" doc:id="0ef52d78-859a-436e-82d6-877f9394130f">
+        <logger level="INFO" doc:name="Logger" doc:id="04003e92-acd1-426f-831c-4d31c5f30a2c" message="Unblock flow start logger" />
+        <flow-ref doc:name="Flow Reference" doc:id="8a2e53df-9619-40be-9d4c-cc8f05b11303" name="unblock-implementationFlowSub_Flow" />
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Account 1234567890 is unblocked"
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="aff49d90-6e54-410f-b28a-3ca75ccdbe28" message="unblock flow end logger" />
+        <error-handler ref="Error_Handler_Application" />
+    </flow>
+    <flow name="post:\checkBalance:application\json:atm-transactions-api-raml-config" doc:id="0caa22d5-92e8-4595-a22e-19c86080b78e">
+        <logger level="INFO" doc:name="Logger" doc:id="7169b7d3-1494-4bed-9917-c3149bbbdedb" message="check balance flow start logger" />
+        <flow-ref doc:name="Flow Reference" doc:id="e45b8255-6427-4e17-88cc-008c64c0b62f" name="checkbalance-implementationFlowSub_Flow" />
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="efc5426f-cc6d-49e4-b9c1-198d8c03d066" message="check balance flow end logger" />
+        <error-handler ref="Error_Handler_Application" />
+    </flow>
+    <flow name="post:\createAccount:application\json:atm-transactions-api-raml-config" doc:id="490554b3-1944-48f7-90b5-5875633ec3bb">
+        <logger level="INFO" doc:name="Logger" doc:id="5abb5d6d-c667-44d1-9e0f-f9b91a8bfa48" message="create account flow start logger" />
+        <flow-ref doc:name="Flow Reference" doc:id="a8249d81-ad3f-48d5-981b-8e6bc2e0613b" name="createAccountFlow" />
+        <logger level="INFO" doc:name="Logger" doc:id="3974d3c1-6e57-49c6-ae7a-a237bd903194" message="create account flow end logger" />
+        <error-handler ref="Error_Handler_Application" />
+    </flow>
+    <flow name="post:\withDraw:application\json:atm-transactions-api-raml-config" doc:id="0b6d5fb8-d021-4f6c-ab0c-0e29203d9cec">
+        <logger level="INFO" doc:name="Logger" doc:id="d75de33b-b9eb-4a77-a9fe-71091b3bd42f" message="with draw flow start logger" />
+        <flow-ref doc:name="Flow Reference" doc:id="9f4e0461-03f3-47fe-a8eb-ddb79cf25a24" name="withDraw-implementationFlowSub_Flow" />
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Amount 5000 is debited. Your total balance is 45000"
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="6117b91a-5adf-481f-b180-aeb3a4f6c936" message="with draw flow end logger" />
+        <error-handler ref="Error_Handler_Application" />
+    </flow>
+</mule>

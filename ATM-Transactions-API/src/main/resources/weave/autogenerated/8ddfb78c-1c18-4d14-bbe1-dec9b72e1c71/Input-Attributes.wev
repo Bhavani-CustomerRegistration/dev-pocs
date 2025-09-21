@@ -1,0 +1,28 @@
+%dw 2.0
+
+type auto_8ddfb78c_1c18_4d14_bbe1_dec9b72e1c71_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|
+    customerName: String, 
+    branchName: String, 
+    bank: "ICICI" | "HDFC" | "AXIS", 
+    "type": "current" | "savings"
+  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|  |}, 
+  version: String, 
+  localAddress: String
+|}
+

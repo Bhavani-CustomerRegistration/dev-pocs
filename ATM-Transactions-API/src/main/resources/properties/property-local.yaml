@@ -1,0 +1,7 @@
+http:
+ host: "localhost"
+ port: "8081"
+ readTimeout: "30000"
+ connectionTimeout: "60000"
+ retryFrequency: "2"
+ retryAttempt: "2000"

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="checkbalance-implementationFlowSub_Flow" doc:id="27f789f3-6ed0-4cc9-ac95-b578f6665d83" >
+		<ee:transform doc:name="Transform Message" doc:id="7a7fca25-1a20-4baf-b68c-e9d0d6e49a62" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custAccNum" ><![CDATA[payload.accountNum]]></ee:set-variable>
+				<ee:set-variable variableName="bankName" ><![CDATA[attributes.queryParams.bank]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Select" doc:id="c838096e-1b45-46e2-889f-d4b3f7cc85f5" config-ref="Database_Config" target="accountStatus">
+			<db:sql ><![CDATA[select accountStatus from bank_transactions where custAccNum = :custAccNum ;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[custAccNum : vars.custAccNum]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="5fd32642-84d1-4070-854d-8e8aadeb2559" >
+			<when expression="#[vars.accountStatus !=null]">
+				<logger level="INFO" doc:name="Logger" doc:id="219a4f4e-80b7-4f39-80f4-91ecc3993889" message="Accoount status is Active"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="2d35f59f-84d5-48fa-ac19-239c577fe68a" message="Accoount status is InActive"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="37642f8b-359a-4073-b1e7-f83279005421" message="check balance subflow logger"/>
+	</sub-flow>
+</mule>

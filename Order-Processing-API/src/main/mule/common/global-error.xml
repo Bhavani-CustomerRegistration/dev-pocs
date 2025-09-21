@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	
+	 <error-handler name="Error_Handler-APIKit">
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+			<logger level="INFO" doc:name="Error Logger" doc:id="d25b6d5b-8587-44fe-9d40-0bf2ddeee46b" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Bad request",
+	"code": 400,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	
+}
+}
+]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+			<logger level="INFO" doc:name="Error Logger" doc:id="7364545e-46d8-4750-aaac-682f7168e517" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Resource not found",
+	"code": 404,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	
+}
+}
+]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <logger level="INFO" doc:name="Error Logger" doc:id="4c8098bd-a397-433d-8216-8a22e7bed6fe" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Method not allowed",
+	"code": 405,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	
+}
+}
+]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <logger level="INFO" doc:name="Error Logger" doc:id="eb6682a8-e4c0-403d-b7a7-8b5306757980" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Not acceptable",
+	"code": 406,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	
+}
+}
+]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <logger level="INFO" doc:name="Error Logger" doc:id="69df76f8-48d6-4f23-924c-bf8e8ef0a376" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Unsupported media type",
+	"code": 415,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <logger level="INFO" doc:name="Error Logger" doc:id="e62c867d-56be-4f2a-993f-d751b717fb53" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Not Implemented",
+	"code": 501,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": error.errorType,
+		"details": error.description
+	
+}
+}
+]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+	<error-handler name="Error_Handler_Application" doc:id="22bc0180-142b-49a5-b635-4b1ecde2ce98" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="66b696f6-ab0d-48cb-81a0-3b30d8701db8" >
+			<logger level="INFO" doc:name="Error Logger" doc:id="c699b59a-d77c-4fa8-8220-4e3e4d4b2a52" message="Error Log For Transaction ID  #[vars.transactionId] #[error.errorType]#[error.description]" />
+			<ee:transform doc:name="Transform Message" doc:id="077328dd-2858-46bf-9ea1-2abf826bad1d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "failed operation",
+	"code": 500,
+	"transactionId": "123456789123456789123456789123456789",
+	"error": {
+		"type": "INTERNAL_SERVER_ERROR",
+		"details": "Error with internal system"
+	
+}
+}
+]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>
